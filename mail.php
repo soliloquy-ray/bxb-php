@@ -12,9 +12,9 @@ class Mail{
 	private $mail;
     private static $_instance;
 
-	public static function getInstance(){
+	public static function getInstance($api = ''){
 		if(!self::$_instance){
-			self::$_instance = new self();
+			self::$_instance = new self($api);
 		}
 		return self::$_instance;
 	}
