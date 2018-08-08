@@ -3,26 +3,13 @@ require_once("index.php");
 require_once("mail.php");
 require_once("twilio.php");
 
+$api = base64_decode("QUM0NGIwMGJiN2MwNzkzMmRhM2M5MjgwY2RmNDViNGVlOQ==");
+$token = base64_decode("NDg5ZjJmMzQ3MzFmNWI2ZTUyMTQ5MzY4ZTQ2NDFkNjY=");
+$number = '+13123455441';
+
+$tw = Twilio::getInstance($api,$token,$number);
+$tw->sms('+639988560027','Hello world');
 /**/
-	$db = DB::getInstance();
-	$conn = $db->getConnection();
-
-	$tin = 102843275;
-	$user = "agvil";
-	$pass = "agvilpass";
-	//$sth = $conn->prepare("SELECT * From tblMasterList");
-	$sth = $conn->prepare("uspLoanGetbyStatus 1");
-	//$sth->bindParam(1, $tin);
-	//$sth->bindParam(1, $user);
-	//$sth->bindParam(2, $pass);
-	$sth->execute();
-	$arr = array();
-	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
-		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
-		$arr[] = $i;
-	}
-
-	echo json_encode($arr);
 
 
 ?>
