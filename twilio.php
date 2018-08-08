@@ -2,6 +2,7 @@
 
 require_once('twilio/Rest/Client.php');
 require_once('twilio/Domain.php');
+require_once('twilio/Exceptions/RestException.php');
 require_once('twilio/Version.php');
 require_once('twilio/ListResource.php');
 require_once('twilio/Values.php');
