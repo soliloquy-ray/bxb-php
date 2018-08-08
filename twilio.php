@@ -11,6 +11,7 @@ require('twilio/Values.php');
 require('twilio/Serialize.php');
 require('twilio/VersionInfo.php');
 require('twilio/InstanceContext.php');
+require('twilio/Rest/Api/V2010/Account/MessageInstance.php');
 require('twilio/Rest/Api/V2010/Account/MessageList.php');
 require('twilio/Rest/Api/V2010/AccountContext.php');
 require('twilio/Rest/Api/V2010.php');
