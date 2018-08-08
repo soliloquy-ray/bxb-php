@@ -12,7 +12,7 @@ $token = base64_decode("NDg5ZjJmMzQ3MzFmNWI2ZTUyMTQ5MzY4ZTQ2NDFkNjY=");
 $number = '+15005550006';
 
 $tw = Twilio::getInstance($api,$token,$number);
-$tw->sms('9988560027','Hello world');
+$tw->sms('9988560026','Hello world');
 
 
 ?>
