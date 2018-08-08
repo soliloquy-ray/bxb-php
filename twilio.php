@@ -1,23 +1,23 @@
 <?php
 
-require_once('twilio/Rest/Client.php');
-require_once('twilio/Domain.php');
-require_once('twilio/Exceptions/TwilioException.php');
-require_once('twilio/Exceptions/EnvironmentException.php');
-require_once('twilio/Exceptions/RestException.php');
-require_once('twilio/Version.php');
-require_once('twilio/ListResource.php');
-require_once('twilio/Values.php');
-require_once('twilio/Serialize.php');
-require_once('twilio/VersionInfo.php');
-require_once('twilio/InstanceContext.php');
-require_once('twilio/Rest/Api/V2010/Account/MessageList.php');
-require_once('twilio/Rest/Api/V2010/AccountContext.php');
-require_once('twilio/Rest/Api/V2010.php');
-require_once('twilio/Rest/Api.php');
-require_once('twilio/Http/Client.php');
-require_once('twilio/Http/Response.php');
-require_once('twilio/Http/CurlClient.php');
+require('twilio/Rest/Client.php');
+require('twilio/Domain.php');
+require('twilio/Exceptions/TwilioException.php');
+require('twilio/Exceptions/EnvironmentException.php');
+require('twilio/Exceptions/RestException.php');
+require('twilio/Version.php');
+require('twilio/ListResource.php');
+require('twilio/Values.php');
+require('twilio/Serialize.php');
+require('twilio/VersionInfo.php');
+require('twilio/InstanceContext.php');
+require('twilio/Rest/Api/V2010/Account/MessageList.php');
+require('twilio/Rest/Api/V2010/AccountContext.php');
+require('twilio/Rest/Api/V2010.php');
+require('twilio/Rest/Api.php');
+require('twilio/Http/Client.php');
+require('twilio/Http/Response.php');
+require('twilio/Http/CurlClient.php');
 
 use Twilio\Rest\Client;
 
