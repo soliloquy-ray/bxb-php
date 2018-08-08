@@ -2,6 +2,8 @@
 
 require_once('twilio/Rest/Client.php');
 require_once('twilio/Domain.php');
+require_once('twilio/Exceptions/TwilioException.php');
+require_once('twilio/Exceptions/EnvironmentException.php');
 require_once('twilio/Exceptions/RestException.php');
 require_once('twilio/Version.php');
 require_once('twilio/ListResource.php');
@@ -9,8 +11,6 @@ require_once('twilio/Values.php');
 require_once('twilio/Serialize.php');
 require_once('twilio/VersionInfo.php');
 require_once('twilio/InstanceContext.php');
-require_once('twilio/Exceptions/TwilioException.php');
-require_once('twilio/Exceptions/EnvironmentException.php');
 require_once('twilio/Rest/Api/V2010/Account/MessageList.php');
 require_once('twilio/Rest/Api/V2010/AccountContext.php');
 require_once('twilio/Rest/Api/V2010.php');
