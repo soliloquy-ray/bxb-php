@@ -7,6 +7,7 @@ require('twilio/Exceptions/EnvironmentException.php');
 require('twilio/Exceptions/RestException.php');
 require('twilio/Version.php');
 require('twilio/ListResource.php');
+require('twilio/Deserialize.php');
 require('twilio/InstanceResource.php');
 require('twilio/Values.php');
 require('twilio/Serialize.php');
