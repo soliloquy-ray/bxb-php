@@ -15,8 +15,8 @@ require_once('twilio/Rest/Api/V2010/AccountContext.php');
 require_once('twilio/Rest/Api/V2010.php');
 require_once('twilio/Rest/Api.php');
 require_once('twilio/Http/Client.php');
-require_once('twilio/Http/CurlClient.php');
 require_once('twilio/Http/Response.php');
+require_once('twilio/Http/CurlClient.php');
 
 use Twilio\Rest\Client;
 
