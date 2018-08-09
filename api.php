@@ -1,7 +1,7 @@
 <?php
 $http_origin = $_SERVER['HTTP_ORIGIN'];
 
-if ($http_origin == "http://localhost:8100" || $http_origin == "https://bxb-app.azurewebsites.net")
+if ($http_origin == "http://localhost:8100" || $http_origin == "https://bxb-app.azurewebsites.net" || $http_origin == "https://test-backend.bxbesc.com")
 {  
     header("Access-Control-Allow-Origin: $http_origin");
     header("Access-Control-Allow-Headers: 'Origin, X-Requested-With, Content-Type, Accept'");
@@ -265,17 +265,5 @@ switch ($req) {
 		# code...
 		break;
 }
-
-/*$uname = "blu";
-$upass = "password";
-$out = "";
-$sth = $conn->prepare("exec uspLogin ?, ?, ?");
-$sth->bindParam(1, $uname);
-$sth->bindParam(2, $upass);
-$sth->bindParam(3, $out, PDO::PARAM_STR|PDO::PARAM_INPUT_OUTPUT, 4000);
-$sth->execute();
-
-print_r($out);*/
-
 
 ?>
