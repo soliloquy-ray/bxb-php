@@ -14,6 +14,33 @@ require_once("twilio.php");
 $req = $_REQUEST['q'];
 $p = json_decode(file_get_contents('php://input'), true);
 
+function getSendgridConfig(){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+	$sth = $conn->prepare("uspEnvironmentApi sendgrid");
+	$sth->execute();
+	$ret = "";
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		if($i['name']=="sendgrid"){
+			$ret = $i['value'];
+			break;
+		}
+	}
+	return $ret;
+}
+
+function getTwilioConfig(){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+	$sth = $conn->prepare("uspEnvironmentApi twilio");
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$arr[$i['name']] = $i['value'];
+	}
+	return $arr;
+}
+
 function login($username = '', $password = '', $out = ''){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
@@ -29,6 +56,17 @@ function login($username = '', $password = '', $out = ''){
 		return false;
 	}
 
+}
+
+function updateLoanStatus($status = 0,$loanId = 0){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+	$sth = $conn->prepare("EXEC uspLoanUpdateStatus ?, ?");
+	$sth->bindParam(1, $loanId);
+	$sth->bindParam(2, $status);
+	$sth->execute();
+	
+	echo $sth->rowCount();
 }
 
 /**
@@ -130,7 +168,7 @@ function changePass($id,$pass,$newPass){
 
 function sendMailForgotPw($email){
 
-	$api = base64_decode("U0cuREpjQkU3NEdUTC1PcHBXVHRjZTJFdy5qd3h0bHI0YURWRXVDUDM1ci1KMm16ZEFDLUlxaE4xd1p5QkNfUWxWdHpJ");
+	$api = getSendgridConfig();
 	$mail = Mail::getInstance($api);
 
 	$succ = $mail->send('rsantos@bxbesc.com',$email,'Reset Password',@file_get_contents('./email-templates/forgotpw.html'));
@@ -219,6 +257,9 @@ switch ($req) {
 		break;
 	case 'hr_get_loan_by_status':
 		getLoanDetailsByStatus($p['status']);
+		break;
+	case 'update_loan_status':
+		updateLoanStatus($p['id'],$p['status']);
 		break;
 	default:
 		# code...
