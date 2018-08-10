@@ -58,7 +58,7 @@ function login($username = '', $password = '', $out = ''){
 
 }
 
-function updateLoanStatus($status = 0,$loanId = 0){
+function updateLoanStatus($loanId = 0,$status = 0){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 	$sth = $conn->prepare("EXEC uspLoanUpdateStatus ?, ?");
