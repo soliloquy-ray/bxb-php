@@ -271,7 +271,14 @@ switch ($req) {
 		updateLoanStatus($p['id'],$p['status']);
 		break;
 	case 'gen_otp':
-		sendSMSOTP($p['mobile'],$p['otp']);
+		$hash = preg_replace('/[0-9]+/', '', $p['h']);
+		$val = preg_replace('/[0-9]+/', '', $p['otp']);
+  		$otp = "";
+	  	for($i = 0; $i<strlen($val);$i++){
+	  		$otp .= strpos($hash,$val[$i]);
+	  	}
+		sendSMSOTP($p['mobile'],$otp);
+		echo json_encode(array($hash,$val,$otp));
 		break;
 	default:
 		# code...
