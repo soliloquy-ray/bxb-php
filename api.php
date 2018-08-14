@@ -110,7 +110,7 @@ function getUserDetailsById($id = 0){
 		$arr[] = $i;
 	}
 
-	return $arr[0];
+	return $arr[count($arr)-1];
 }
 
 function addUser($user = array()){
@@ -178,6 +178,15 @@ function sendMailForgotPw($email){
 	else{
 		echo "Failed!";
 	}
+}
+
+function sendSMSOTP($mobile,$otp){
+
+	$api = getTwilioConfig();
+	$tw = Twilio::getInstance($api['twilio_service_id'],$api['twilio_auth_token'],$api['twilio_number']);
+
+	$tw->sms($mobile,"Your One time Password (OTP) for bxbesc is ".$otp);
+
 }
 
 function getUserLoanByStatus($stat,$userId = 0){
@@ -260,6 +269,9 @@ switch ($req) {
 		break;
 	case 'update_loan_status':
 		updateLoanStatus($p['id'],$p['status']);
+		break;
+	case 'gen_otp':
+		sendSMSOTP($p['mobile'],$p['otp']);
 		break;
 	default:
 		# code...
