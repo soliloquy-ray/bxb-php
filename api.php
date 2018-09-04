@@ -17,7 +17,7 @@ $p = json_decode(file_get_contents('php://input'), true);
 function getSendgridConfig(){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
-	$sth = $conn->prepare("uspEnvironmentApi sendgrid");
+	$sth = $conn->prepare("EXEC uspEnvironmentApi sendgrid");
 	$sth->execute();
 	$ret = "";
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
@@ -32,7 +32,7 @@ function getSendgridConfig(){
 function getTwilioConfig(){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
-	$sth = $conn->prepare("uspEnvironmentApi twilio");
+	$sth = $conn->prepare("EXEC uspEnvironmentApi twilio");
 	$sth->execute();
 	$arr = array();
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
@@ -140,7 +140,7 @@ function getUserByTIN($tin = 0, $birth = '0000-00-00', $ccode = ''){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
-	$sth = $conn->prepare("uspUserVerify ?, ?"); // AND Company = ? 
+	$sth = $conn->prepare("EXEC uspUserVerify ?, ?"); // AND Company = ? 
 	$sth->bindParam(1, $tin);
 	$sth->bindParam(2, $birth);
 	//$sth->bindParam(3, $ccode);
@@ -194,7 +194,7 @@ function getUserLoanByStatus($stat,$userId = 0){
 	$conn = $db->getConnection();
 
 	//$sth = $conn->prepare("SELECT * FROM tblLoan WHERE status = ? "); // AND Company = ? 
-	$sth = $conn->prepare("uspLoanGetEmployeebyStatus ?, ?"); // AND Company = ? 
+	$sth = $conn->prepare("EXEC uspLoanGetEmployeebyStatus ?, ?"); // AND Company = ? 
 	$sth->bindParam(1, $userId);
 	$sth->bindParam(2, $stat);
 	$sth->execute();
@@ -216,7 +216,7 @@ function getLoanDetailsByStatus($stat){
 	$conn = $db->getConnection();
 
 	//$sth = $conn->prepare("SELECT * FROM tblLoan WHERE status = ? "); // AND Company = ? 
-	$sth = $conn->prepare("uspLoanGetbyStatus ?"); // AND Company = ? 
+	$sth = $conn->prepare("EXEC uspLoanGetbyStatus ?"); // AND Company = ? 
 	$sth->bindParam(1, $stat);
 	$sth->execute();
 
@@ -231,6 +231,64 @@ function getLoanDetailsByStatus($stat){
 	}
 
 	echo json_encode($arr);
+}
+
+/*
+EXEC    [uspMasterListUpload]
+        @Name_Last = N'Endaya',
+        @Name_First = N'Blue',
+        @Name_Middle = N'A',
+        @Email = N'bendaya@bxbesc.com',
+        @Mobile = N'09178132258',
+        @Company = N'BxB',
+        @Date_Hired = '2017-01-01',
+        @Gender = N'M',
+        @Birthday = '1980-01-01',
+        @Position_Title = N'CTO',
+        @Entity = N'Human',
+        @Type = N'Pretty',
+        @Division = N'Corporate',
+        @Net_Salary = 100000,
+        @Gross_Salar = 150000,
+        @Payroll_Account = N'0987654321',
+        @Bank_Name = N'BDO',
+        @Vacation_Leave = 10,
+        @Sick_Leave = 10,
+        @Maternity_Leaves = 0,
+        @Paternity_Leaves = 0,
+        @TIN = 234567890,
+        @CompanyID = 2*/
+function manualAddEmp($emp){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspMasterListUpload ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+	$sth->bindParam(1,  $emp['lastName']);
+	$sth->bindParam(2,  $emp['firstName']);
+	$sth->bindParam(3,  $emp['middleName']);
+	$sth->bindParam(4,  $emp['email']);
+	$sth->bindParam(5,  $emp['mobile']);
+	$sth->bindParam(6,  $emp['company']);
+	$sth->bindParam(7,  $emp['hiredDate']);
+	$sth->bindParam(8,  $emp['gender']);
+	$sth->bindParam(9,  $emp['birthday']);
+	$sth->bindParam(10, $emp['position']);
+	$sth->bindParam(11, $emp['entity']);
+	$sth->bindParam(12, $emp['type']);
+	$sth->bindParam(13, $emp['division']);
+	$sth->bindParam(14, $emp['netSalary']);
+	$sth->bindParam(15, $emp['grossSalary']);
+	$sth->bindParam(16, $emp['payrollAccount']);
+	$sth->bindParam(17, $emp['bankName']);
+	$sth->bindParam(18, $emp['vacationLeave']);
+	$sth->bindParam(19, $emp['sickLeave']);
+	$sth->bindParam(20, $emp['maternityLeave']);
+	$sth->bindParam(21, $emp['paternityLeave']);
+	$sth->bindParam(22, $emp['tin']);
+	$sth->bindParam(23, $emp['companyId']);
+	$res = $sth->execute();
+
+	echo json_encode($res);
 }
 
 switch ($req) {
@@ -279,6 +337,16 @@ switch ($req) {
 	  	}
 		sendSMSOTP($p['mobile'],$otp);
 		echo json_encode(array($hash,$val,$otp));
+		break;
+	case 'uploadcsv':
+		//echo json_encode($p['data']);
+		foreach ($p['data'] as $key => $value) {
+			echo json_encode(explode(",", $value));
+		}
+		break;
+	case 'manual_add_employee':
+		//print_r($p['emp']);
+		manualAddEmp($p['emp']);
 		break;
 	default:
 		# code...
