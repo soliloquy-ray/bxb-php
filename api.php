@@ -6,6 +6,7 @@ if ($http_origin == "http://localhost:8100" || $http_origin == "https://bxb-app.
     header("Access-Control-Allow-Origin: $http_origin");
     header("Access-Control-Allow-Headers: 'Origin, X-Requested-With, Content-Type, Accept'");
 }
+if($_SERVER['REQUEST_METHOD'] == "OPTIONS") exit;
 
 require_once("index.php");
 require_once("mail.php");
@@ -233,31 +234,6 @@ function getLoanDetailsByStatus($stat){
 	echo json_encode($arr);
 }
 
-/*
-EXEC    [uspMasterListUpload]
-        @Name_Last = N'Endaya',
-        @Name_First = N'Blue',
-        @Name_Middle = N'A',
-        @Email = N'bendaya@bxbesc.com',
-        @Mobile = N'09178132258',
-        @Company = N'BxB',
-        @Date_Hired = '2017-01-01',
-        @Gender = N'M',
-        @Birthday = '1980-01-01',
-        @Position_Title = N'CTO',
-        @Entity = N'Human',
-        @Type = N'Pretty',
-        @Division = N'Corporate',
-        @Net_Salary = 100000,
-        @Gross_Salar = 150000,
-        @Payroll_Account = N'0987654321',
-        @Bank_Name = N'BDO',
-        @Vacation_Leave = 10,
-        @Sick_Leave = 10,
-        @Maternity_Leaves = 0,
-        @Paternity_Leaves = 0,
-        @TIN = 234567890,
-        @CompanyID = 2*/
 function manualAddEmp($emp){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
@@ -286,6 +262,61 @@ function manualAddEmp($emp){
 	$sth->bindParam(21, $emp['paternityLeave']);
 	$sth->bindParam(22, $emp['tin']);
 	$sth->bindParam(23, $emp['companyId']);
+	$res = $sth->execute();
+
+	echo json_encode($res);
+}
+
+/**
+@company_name, @country, @address, @city, @zipcode, @phone, @mobile, @maxLoan, @minLoan, @maxRate, @minRate, @bank varchar(100),
+    @bankBranch varchar(100),
+    @bankAddress varchar(300),
+    @bankAccountNumber varchar(100),
+    @swiftCode varchar(100),
+    @docSubmit bit,
+    @docSEC bit,
+    @docBIR bit,
+    @docFinStatement bit,
+    @docGenInformation bit
+*/
+function addCompany($c){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$docSecRegist = $c['docs']['secRegist'];
+	$docBir2307 = $c['docs']['bir2307'];
+	$docFinStat = $c['docs']['finStat'];
+	$docGis = $c['docs']['gis'];
+
+	if(!$c['docSubmitted']){
+		$docSecRegist = 0;
+		$docBir2307 = 0;
+		$docFinStat = 0;
+		$docGis = 0;
+	}
+
+	$sth = $conn->prepare("EXEC uspCompanyAdd ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+	$sth->bindParam(1,  $c['companyName']);
+	$sth->bindParam(2,  $c['country']);
+	$sth->bindParam(3,  $c['address']);
+	$sth->bindParam(4,  $c['city']);
+	$sth->bindParam(5,  $c['zip']);
+	$sth->bindParam(6,  $c['phone']);
+	$sth->bindParam(7,  $c['mobile']);
+	$sth->bindParam(8,  $c['maxLoan']);
+	$sth->bindParam(9,  $c['minLoan']);
+	$sth->bindParam(10, $c['maxRate']);
+	$sth->bindParam(11, $c['minRate']);
+	$sth->bindParam(12, $c['bankName']);
+	$sth->bindParam(13, $c['bankBranch']);
+	$sth->bindParam(14, $c['bankAddress']);
+	$sth->bindParam(15, $c['accountNumber']);
+	$sth->bindParam(16, $c['swiftCode']);
+	$sth->bindParam(17, $c['docSubmitted']);
+	$sth->bindParam(18, $docSecRegist);
+	$sth->bindParam(19, $docBir2307);
+	$sth->bindParam(20, $docFinStat);
+	$sth->bindParam(21, $docGis);
 	$res = $sth->execute();
 
 	echo json_encode($res);
@@ -347,6 +378,11 @@ switch ($req) {
 	case 'manual_add_employee':
 		//print_r($p['emp']);
 		manualAddEmp($p['emp']);
+		break;
+	case 'new_company':
+		//print_r($p);
+		addCompany($p);
+		//manualAddEmp($p['emp']);
 		break;
 	default:
 		# code...
