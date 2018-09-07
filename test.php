@@ -1,18 +1,27 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 require_once("index.php");
 require_once("mail.php");
 require_once("twilio.php");
 
-$api = base64_decode("QUMzNzc5MDE2YTE2NDcxZjU2NTYxNDZmOGUyMDY3ZmUxOQ==");
-$token = base64_decode("MmNjZjExNzQ5YzI5MTY1MDA2ZWQyZWJkYWZlNzNkY2Y=");
-$number = '+13123455441';
+/**/
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
 
-$tw = Twilio::getInstance($api,$token,$number);
-$tw->sms('9988560026','Hello world');
+	$tin = 102843275;
+	$user = "agvil";
+	$pass = "agvilpass";
+	$sth = $conn->prepare("SELECT * From tblMasterList");
+	//$sth = $conn->prepare("uspEnvironmentApi twilio");
+	//$sth->bindParam(1, $tin);
+	//$sth->bindParam(1, $user);
+	//$sth->bindParam(2, $pass);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
+		$arr[] = $i;
+	}
 
+	echo json_encode($arr);
 
 ?>

@@ -1,8 +1,7 @@
 <?php
 
-echo getcwd();
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: 'Origin, X-Requested-With, Content-Type, Accept'");
 
-$l = exec("dir");
-var_dump($l);
-
+print_r( $_SERVER);
 ?>
