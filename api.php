@@ -1,7 +1,7 @@
 <?php
 $http_origin = $_SERVER['HTTP_ORIGIN'];
 
-if ($http_origin == "http://localhost:8100" || $http_origin == "https://bxb-app.azurewebsites.net" || $http_origin == "https://test-backend.bxbesc.com")
+if ($http_origin == "http://localhost:8100" || $http_origin == "https://bxb-app.azurewebsites.net" || $http_origin == "https://test.bxbesc.com")
 {  
     header("Access-Control-Allow-Origin: $http_origin");
     header("Access-Control-Allow-Headers: 'Origin, X-Requested-With, Content-Type, Accept'");
@@ -384,7 +384,11 @@ switch ($req) {
 		addCompany($p);
 		//manualAddEmp($p['emp']);
 		break;
+	case 'test':
+		echo json_encode(getallheaders());
+		break;
 	default:
+		echo json_encode(getallheaders());
 		# code...
 		break;
 }
