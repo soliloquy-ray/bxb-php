@@ -204,6 +204,7 @@ function getUserLoanByStatus($stat,$userId = 0){
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
 		$i['applicationDate'] = date('m-d-Y',strtotime($i['applicationDate']));
 		$i['term'] = $i['numberPaydays'];
+		//$i['accept'] = $GLOBALS['kval'];
 		$arr[] = $i;
 	}
 
@@ -322,6 +323,41 @@ function addCompany($c){
 	echo json_encode($res);
 }
 
+function addPaymentSchedule($loan, $id){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspPaymentEntryAdd ?, ?, ?, ?, ?");
+
+	foreach($loan as $l){
+		$sth->bindParam(1,  $id);
+		$sth->bindParam(2,  $l['paymentDate']);
+		$sth->bindParam(3,  $l['paymentNum']);
+		$sth->bindParam(4,  $l['amt']);
+		$sth->bindParam(5,  $l['bal']);
+		$res = $sth->execute();
+	}
+
+	echo json_encode($res);
+}
+
+function getPaymentSchedByLoanID($loanID){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspPaymentGetbyLoanID ?");
+
+	$sth->bindParam(1,  $loanID);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
+		$arr[] = $i;
+	}
+
+	echo json_encode($arr);
+}
+
 switch ($req) {
 	case 'login':
 		$usr = isset($p['username']) ? $p['username'] : "";
@@ -383,6 +419,12 @@ switch ($req) {
 		//print_r($p);
 		addCompany($p);
 		//manualAddEmp($p['emp']);
+		break;
+	case 'add_payment_sched':
+		addPaymentSchedule($p['paysched'],$p['id']);
+		break;
+	case 'get_payment_sched_by_id':
+		getPaymentSchedByLoanID($p['loanID']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
