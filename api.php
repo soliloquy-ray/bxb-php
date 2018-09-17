@@ -172,7 +172,7 @@ function sendMailForgotPw($email){
 	$api = getSendgridConfig();
 	$mail = Mail::getInstance($api);
 
-	$succ = $mail->send('rsantos@bxbesc.com',$email,'Reset Password',@file_get_contents('./email-templates/forgotpw.html'));
+	$succ = $mail->send('rsantos@bxbesc.com',$email,'Reset Password',@file_get_contents('./templates/forgotpw.html'));
 	if($succ){
 		echo "Successful!";
 	}
@@ -358,6 +358,112 @@ function getPaymentSchedByLoanID($loanID){
 	echo json_encode($arr);
 }
 
+function updatePaymentSchedule($loan, $id){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspPaymentUpdate ?, ?, ?, ?, ?");
+
+	foreach($loan as $l){
+		$sth->bindParam(1,  $id);
+		$sth->bindParam(2,  $l['paymentDate']);
+		$sth->bindParam(3,  $l['paymentNum']);
+		$sth->bindParam(4,  $l['amt']);
+		$sth->bindParam(5,  $l['bal']);
+		$res = $sth->execute();
+	}
+
+	echo json_encode($res);
+}
+
+function genSOA($soa){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspGenSOA ?");
+
+	$sth->bindParam(1,  $loanID);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
+		$arr[] = $i;
+	}
+
+	echo json_encode($arr);
+}
+
+function getSOAByDate($soa){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspSOAbyCompany ?, ?, ?");
+
+	$sth->bindParam(1,  $soa['date1']);
+	$sth->bindParam(2,  $soa['date2']);
+	$sth->bindParam(3,  $soa['cid']);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
+		$j = array(
+			'pdf'=>'PDF',
+			'company'=>$i['company_name'],
+			'billPeriod'=>date('Y-m-d',strtotime($i['payDate'])),
+			'amt'=>$i['payAmount'],
+			'soaNo'=>$i['soaref'],
+			'refNo'=>'',
+			'companyAct'=>($i['status']==1 ? 'paid' : 'unpaid'),
+			'mgtAct'=>($i['status']==1 ? 'confirmed' : 'confirm')
+		);
+		$arr[] = $j;
+	}
+
+	echo json_encode($arr);
+}
+
+function getSOAPaymentsByDate($soa){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspSOAbyCompanyDetail ?, ?");
+
+	$sth->bindParam(1,  $soa['date']);
+	$sth->bindParam(2,  $soa['cid']);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
+		$j = array(
+			'transDate'=>date('Y-m-d',strtotime($i['payDate'])),
+			'creditAvailmentNumber'=>$i['paymentID'],
+			'memberID'=>$i['master_id'],
+			'firstName'=>$i['Name_First'],
+			'lastName'=>$i['Name_Last'],
+			'seqNo'=>$i['payCount'],
+			'empID'=>$i['master_id'],
+			'transType'=>'Credit Availment',
+			'repaymentAmt'=>$i['payAmount'],
+			'status'=>'Active'
+		);
+		$arr[] = $j;
+	}
+
+	//"transDate":"2018-08-07",
+	//"creditAvailmentNumber":41,
+	//"memberID":"00252",
+	//"firstName":"Ray",
+	//"lastName":"Santos",
+	//"seqNo":"1/12",
+	//"empID":"123",
+	//"transType":"Credit Availment",
+	//"repaymentAmt":2395.83,
+	//"status":"Active"
+
+	echo json_encode($arr);
+
+}
+
 switch ($req) {
 	case 'login':
 		$usr = isset($p['username']) ? $p['username'] : "";
@@ -425,6 +531,15 @@ switch ($req) {
 		break;
 	case 'get_payment_sched_by_id':
 		getPaymentSchedByLoanID($p['loanID']);
+		break;
+	case 'generate_soa':
+		genSOA($p['soa']);
+		break;
+	case 'get_soa_by_date':
+		getSOAByDate($p['soa']);
+		break;
+	case 'get_soa_details_by_date':
+		getSOAPaymentsByDate($p['soa']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
