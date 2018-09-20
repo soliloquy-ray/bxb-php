@@ -148,10 +148,28 @@ function getUserByTIN($tin = 0, $birth = '0000-00-00', $ccode = ''){
 	$sth->execute();
 	$arr = array();
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		if(isset($i['userid']) && $i['userid'] != ""){
+			$i['error'] = "Exists";
+		}
 		$arr[] = $i;
 	}
 
 	echo !empty($arr) ? json_encode($arr) : json_encode(array(false));
+}
+
+function checkUnameExists($uname){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspUserVerifyExist ?"); // AND Company = ? 
+	$sth->bindParam(1, $uname);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$arr[] = $i;
+	}
+
+	echo !empty($arr) ? json_encode($arr) : false;
 }
 
 function changePass($id,$pass,$newPass){
@@ -464,6 +482,23 @@ function getSOAPaymentsByDate($soa){
 
 }
 
+function getCompaniesByID($id = NULL){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspCompanyGet ?");
+
+	$sth->bindParam(1,  $id);
+	$sth->execute();
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$arr[] = $i;
+	}
+
+	echo json_encode($arr);
+
+}
+
 switch ($req) {
 	case 'login':
 		$usr = isset($p['username']) ? $p['username'] : "";
@@ -480,6 +515,9 @@ switch ($req) {
 		break;
 	case 'get_by_tin':
 		getUserByTIN($p['tin'],$p['birth']);
+		break;
+	case 'check_user_exists':
+		checkUnameExists($p['uname']);
 		break;
 	case 'forgotpassmail':
 		sendMailForgotPw($p['email']);
@@ -540,6 +578,9 @@ switch ($req) {
 		break;
 	case 'get_soa_details_by_date':
 		getSOAPaymentsByDate($p['soa']);
+		break;
+	case 'get_company_by_id':
+		getCompaniesByID($p['cid']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
