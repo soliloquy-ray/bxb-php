@@ -568,8 +568,10 @@ switch ($req) {
 		break;
 	case 'send_sms_loan_approval':
 		sendLoanApproval($p['mobile'],$p['amt']);
+		break;
 	case 'send_sms_loan_approved':
 		sendLoanApproved($p['mobile']);
+		break;
 	case 'uploadcsv':
 		//echo json_encode($p['data']);
 		foreach ($p['data'] as $key => $value) {
