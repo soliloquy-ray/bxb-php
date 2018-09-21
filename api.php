@@ -208,6 +208,23 @@ function sendSMSOTP($mobile,$otp){
 
 }
 
+function sendLoanApproval($mobile,$amt){
+
+	$api = getTwilioConfig();
+	$tw = Twilio::getInstance($api['twilio_service_id'],$api['twilio_auth_token'],$api['twilio_number']);
+
+	$tw->sms($mobile,"Your application for PhP ".$amt." has been sent. If you do not receive confirmation within 24 hrs, kindly contact your HR. Thank you");
+}
+
+function sendLoanApproved($mobile){
+
+	$api = getTwilioConfig();
+	$tw = Twilio::getInstance($api['twilio_service_id'],$api['twilio_auth_token'],$api['twilio_number']);
+
+	$tw->sms($mobile,"Congratulations! Your BxB Credit availment has been approved. The funds net of fees have been credited to your payroll account. Thank you for availing.");
+
+}
+
 function getUserLoanByStatus($stat,$userId = 0){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
@@ -549,6 +566,10 @@ switch ($req) {
 		sendSMSOTP($p['mobile'],$otp);
 		echo json_encode(array($hash,$val,$otp));
 		break;
+	case 'send_sms_loan_approval':
+		sendLoanApproval($p['mobile'],$p['amt']);
+	case 'send_sms_loan_approved':
+		sendLoanApproved($p['mobile']);
 	case 'uploadcsv':
 		//echo json_encode($p['data']);
 		foreach ($p['data'] as $key => $value) {
