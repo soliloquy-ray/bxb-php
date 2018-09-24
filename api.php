@@ -581,6 +581,8 @@ function getCompaniesByID($id = NULL){
 	$sth->execute();
 	$arr = array();
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$i['companyName'] = $i['company_name'];
+		$i['companyCode'] = substr('00'.$i['CompanyID'],-3);
 		$arr[] = $i;
 	}
 
