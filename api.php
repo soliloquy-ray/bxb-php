@@ -42,6 +42,23 @@ function getTwilioConfig(){
 	return $arr;
 }
 
+function loginAdmin($username = '', $password = '', $out = ''){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+	$sth = $conn->prepare("EXEC uspLogin ?, ?");
+	$sth->bindParam(1, $username);
+	$sth->bindParam(2, $password);
+	$sth->execute();
+	
+	try{
+		$i = $sth->fetch(PDO::FETCH_ASSOC);
+		return $i;
+	}catch(Exception $e){
+		return false;
+	}
+
+}
+
 function login($username = '', $password = '', $out = ''){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
@@ -135,6 +152,44 @@ function addUser($user = array()){
 	$sth->execute();
 
 	echo $resp;
+}
+
+function addHr($user = array()){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+	$loginName = $user["login"];
+	$pass = $user["password"];
+	$mobile = $user["mobile"];
+	$email = $user["email"];
+	$id = 0;
+	$resp = "";
+
+	$sth = $conn->prepare("EXEC uspUserAdd ?, ?, ?, ?, ?, ?");
+	$sth->bindParam(1, $loginName);
+	$sth->bindParam(2, $pass);
+	$sth->bindParam(3, $mobile);
+	$sth->bindParam(4, $email);
+	$sth->bindParam(5, $id);
+	$sth->bindParam(6, $resp, PDO::PARAM_STR|PDO::PARAM_INPUT_OUTPUT, 4000);
+
+	$sth->execute();
+	
+	$i = $sth->fetch();
+	return $i[0];
+}
+
+function assignRole($loginId = 0, $compId = 0, $roleId = 2){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspRoleAssignment ?, ?, ?");
+	$sth->bindParam(1, $loginId);
+	$sth->bindParam(2, $roleId);
+	$sth->bindParam(3, $compId);
+	$sth->bindParam(6, $resp, PDO::PARAM_STR|PDO::PARAM_INPUT_OUTPUT, 4000);
+
+	$sth->execute();
+	echo $sth->rowCount();
 }
 
 function getUserByTIN($tin = 0, $birth = '0000-00-00', $ccode = ''){
@@ -247,14 +302,15 @@ function getUserLoanByStatus($stat,$userId = 0){
 
 }
 
-function getLoanDetailsByStatus($stat){
+function getLoanDetailsByStatus($stat, $cid){
 
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
 	//$sth = $conn->prepare("SELECT * FROM tblLoan WHERE status = ? "); // AND Company = ? 
-	$sth = $conn->prepare("EXEC uspLoanGetbyStatus ?"); // AND Company = ? 
-	$sth->bindParam(1, $stat);
+	$sth = $conn->prepare("EXEC uspLoanGetbyStatus ?, ?"); // AND Company = ? 
+	$sth->bindParam(1, $cid);
+	$sth->bindParam(2, $stat);
 	$sth->execute();
 
 	$arr = array();
@@ -393,6 +449,21 @@ function getPaymentSchedByLoanID($loanID){
 	echo json_encode($arr);
 }
 
+function getLoanCountByStatus($companyId, $status){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspLoanGetCountbyStatus ?, ?");
+
+	$sth->bindParam(1,  $companyId);
+	$sth->bindParam(2,  $status);
+	$sth->execute();
+	$arr = array();
+	$i = $sth->fetch(PDO::FETCH_ASSOC);
+
+	return $i;
+}
+
 function updatePaymentSchedule($loan, $id){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
@@ -449,6 +520,7 @@ function getSOAByDate($soa){
 			'soaNo'=>$i['soaref'],
 			'refNo'=>'',
 			'companyAct'=>($i['status']==1 ? 'paid' : 'unpaid'),
+			'status'=>($i['status']==1 ? 'paid' : 'unpaid'),
 			'mgtAct'=>($i['status']==1 ? 'confirmed' : 'confirm')
 		);
 		$arr[] = $j;
@@ -527,6 +599,16 @@ switch ($req) {
 			echo json_encode(array(false));
 		}
 		break;
+	case 'admin-login':
+		$usr = isset($p['username']) ? $p['username'] : "";
+		$pass = isset($p['pass']) ? $p['pass'] : "";
+		$id = loginAdmin($usr,$pass);
+		if($id){
+			echo json_encode($id);
+		}else{
+			echo json_encode(array(false));
+		}
+		break;
 	case 'signup':
 		addUser($p);
 		break;
@@ -551,7 +633,7 @@ switch ($req) {
 		getUserLoanByStatus($p['status'],$p['id']);
 		break;
 	case 'hr_get_loan_by_status':
-		getLoanDetailsByStatus($p['status']);
+		getLoanDetailsByStatus($p['status'], $p['cid']);
 		break;
 	case 'update_loan_status':
 		updateLoanStatus($p['id'],$p['status']);
@@ -604,6 +686,13 @@ switch ($req) {
 		break;
 	case 'get_company_by_id':
 		getCompaniesByID($p['cid']);
+		break;
+	case 'add_hr':
+		$logId = addHr($p);
+		assignRole($logId, $p['companyId'], 2);
+		break;
+	case 'get_pending_loan_count':
+		echo getLoanCountByStatus($p['cid'], 1)['pending'];
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
