@@ -521,7 +521,8 @@ function getSOAByDate($soa){
 			'refNo'=>'',
 			'companyAct'=>($i['status']==1 ? 'paid' : 'unpaid'),
 			'status'=>($i['status']==1 ? 'paid' : 'unpaid'),
-			'mgtAct'=>($i['status']==1 ? 'confirmed' : 'confirm')
+			'mgtAct'=>($i['status']==1 ? 'confirmed' : 'confirm'),
+			'CompanyID'=>$i['CompanyID']
 		);
 		$arr[] = $j;
 	}
