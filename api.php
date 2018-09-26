@@ -552,7 +552,8 @@ function getSOAPaymentsByDate($soa){
 			'empID'=>$i['master_id'],
 			'transType'=>'Credit Availment',
 			'repaymentAmt'=>$i['payAmount'],
-			'status'=>'Active'
+			'status'=>'Active',
+			'term'=>$i['numberPaydays']
 		);
 		$arr[] = $j;
 	}
