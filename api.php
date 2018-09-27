@@ -69,7 +69,7 @@ function login($username = '', $password = '', $out = ''){
 	
 	try{
 		$i = $sth->fetch(PDO::FETCH_ASSOC);
-		return $i['master_id'];
+		return $i;
 	}catch(Exception $e){
 		return false;
 	}
@@ -596,9 +596,9 @@ switch ($req) {
 	case 'login':
 		$usr = isset($p['username']) ? $p['username'] : "";
 		$pass = isset($p['pass']) ? $p['pass'] : "";
-		$id = login($usr,$pass);
-		if($id){
-			echo json_encode(getUserDetailsById($id));
+		$i = login($usr,$pass);
+		if($i){
+			echo json_encode(getUserDetailsById($i['master_id']));
 		}else{
 			echo json_encode(array(false));
 		}
@@ -607,7 +607,7 @@ switch ($req) {
 		$usr = isset($p['username']) ? $p['username'] : "";
 		$pass = isset($p['pass']) ? $p['pass'] : "";
 		$id = loginAdmin($usr,$pass);
-		if($id){
+		if($id && $id['master_id']==0){
 			echo json_encode($id);
 		}else{
 			echo json_encode(array(false));
