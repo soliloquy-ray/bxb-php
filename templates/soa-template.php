@@ -1,8 +1,9 @@
 <?php
+	require_once '../dompdf_0-8-2/autoload.inc.php';
 	require_once("../index.php");
-	header('Content-disposition: attachment; filename="mytablea.xlsx"');
-	header("Content-type: application/vnd.ms-excel");
-	header('Cache-Control: max-age=0');
+	//header('Content-disposition: attachment; filename="mytablea.xlsx"');
+	//header("Content-type: application/vnd.ms-excel");
+	//header('Cache-Control: max-age=0');
 
 	$cid = $_GET['cid'];
 	$d1 = $_GET['d1'];
@@ -58,64 +59,75 @@
 		$sched[] = $j;
 	}
 
+
+	$sth = $conn->prepare("EXEC uspCompanyGet ?");
+
+	$sth->bindParam(1,  $cid);
+	$sth->execute();
+	$comp = $sth->fetch(PDO::FETCH_ASSOC);
+
 	
 ?>
 <html>
-<body style="padding:0;margin:0;font-family:'Calibri',sans-serif;background-color: #fff">
-	<table style="height:100%;width:100%;display: table; margin: auto; table-layout: fixed;border:0;">
+<body style="padding:5px 10px;margin:0;font-family:'Calibri',sans-serif;background-color: #fff;">
+	<table style="height:100%;width:100%;display: table; margin: auto;border:0;">
 		<tr>
 			<td colspan="9">
 				<img src="https://bxb-app.azurewebsites.net/assets/imgs/logo.png" style="height:125px;">
 			</td>
 		</tr>
 		<tr>
-			<th colspan="3" style="text-align:left;">STATEMENT OF ACCOUNT</th>
-			<th colspan="3" style="text-align:left;">Company Code</th>
-			<th colspan="3">&nbsp;</th>
+			<th colspan="6" style="text-align:left;">STATEMENT OF ACCOUNT</th>
+			<th colspan="1" style="text-align:left;">Company Code</th>
+			<td colspan="2"><?=substr('00'.$cid,-3)?></td>
 		</tr>
 
 		<tr>
-			<td colspan="3">SOA Ref# 201831D4</td>
-			<td colspan="3">Billing Period</td>
-			<td colspan="3">08-31-2018 to <?=$arr['billPeriod']?></td>
+			<td colspan="6">SOA Ref# 201831D4</td>
+			<td colspan="1">Billing Period</td>
+			<td colspan="2">08-31-2018 to <?=$arr['billPeriod']?></td>
 		</tr>
 		<tr>
-			<td colspan="3">&nbsp;</td>
-			<td colspan="3">Due Date</td>
-			<td colspan="3"><?=$arr['billPeriod']?></td>
+			<td colspan="6"><?=$comp['company_name']?></td>
+			<td colspan="1">Due Date</td>
+			<td colspan="2"><?=$arr['billPeriod']?></td>
 		</tr>
 		<tr>
-			<td colspan="3">&nbsp;</td>
-			<td colspan="3">Amount Due</td>
-			<td colspan="3"><?=number_format((float)$arr['amt'], 2, '.', '')?></td>
+			<td colspan="6">&nbsp;</td>
+			<td colspan="1">Amount Due</td>
+			<td colspan="2"><?=number_format((float)$arr['amt'], 2, '.', '')?></td>
 		</tr>
 		<tr>
-			<td colspan="3">&nbsp;</td>
-			<td colspan="3">Previous Unpaid Balance</td>
-			<td colspan="3">0</td>
+			<td colspan="6">&nbsp;</td>
+			<td colspan="1">Previous Unpaid Balance</td>
+			<td colspan="2">0</td>
 		</tr>
 		<tr>
-			<td colspan="3">&nbsp;</td>
-			<td colspan="3">Total Amount Due</td>
-			<td colspan="3"><?=number_format((float)$arr['amt'], 2, '.', '')?></td>
+			<td colspan="6">&nbsp;</td>
+			<td colspan="1">Total Amount Due</td>
+			<td colspan="2"><?=number_format((float)$arr['amt'], 2, '.', '')?></td>
 		</tr>
 		
+		<tr>
+			<td colspan="9">&nbsp;</td>
+		</tr>
+
 		<tr>
 			<th colspan="9">CURRENT BALANCE</th>
 		</tr>
 		<tr>
-			<th colspan="9" style="background-color:#333;height:3px;">&nbsp;</th>
+			<th colspan="9" style="background-color:#333;height:3px;"></th>
 		</tr>
 		<tr>
-			<th>Transaction Date</th>
-			<th>Credit Availment Number</th>
-			<th>Member ID</th>
-			<th>First Name</th>
-			<th>Last Name</th>
-			<th>Seq. No.</th>
-			<th>Employee ID</th>
-			<th>Transaction Type</th>
-			<th>Repayment Amount</th>
+			<th style="text-align:left;">Transaction Date</th>
+			<th style="text-align:left;">Credit Availment Number</th>
+			<th style="text-align:left;">Member ID</th>
+			<th style="text-align:left;">First Name</th>
+			<th style="text-align:left;">Last Name</th>
+			<th style="text-align:left;">Seq. No.</th>
+			<th style="text-align:left;">Employee ID</th>
+			<th style="text-align:left;">Transaction Type</th>
+			<th style="text-align:left;">Repayment Amount</th>
 		</tr>
 
 		<?php
@@ -130,7 +142,7 @@
 			<td><?=$s['seqNo']."/".$s['term']?></td>
 			<td><?=$s['empID']?></td>
 			<td><?=$s['transType']?></td>
-			<td><?=$s['repaymentAmt']?></td>
+			<td><?=number_format((float)$s['repaymentAmt'], 2, '.', '')?></td>
 		</tr>
 		<?php endforeach; ?>
 		<!--tr>
@@ -167,12 +179,15 @@
 			<td>2,025.00</td>
 		</tr-->
 
+		<tr>
+			<td colspan="9">&nbsp;</td>
+		</tr>
 
 		<tr>
 			<th colspan="9">PREVIOUS BALANCE</th>
 		</tr>
 		<tr>
-			<th colspan="9" style="background-color:#333;height:3px;">&nbsp;</th>
+			<th colspan="9" style="background-color:#333;height:3px;"></th>
 		</tr>
 		<tr>
 			<th>Transaction Date</th>
@@ -252,7 +267,10 @@
 			<td>895.83</td>
 		</tr-->
 		<tr>
-			<th colspan="9" style="background-color:#333;height:3px;">&nbsp;</th>
+			<td colspan="9">&nbsp;</td>
+		</tr>
+		<tr>
+			<th colspan="9" style="background-color:#333;height:3px;"></th>
 		</tr>
 		<tr>
 			<th colspan="9">END OF STATEMENT</th>

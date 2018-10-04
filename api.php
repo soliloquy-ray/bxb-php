@@ -553,7 +553,8 @@ function getSOAPaymentsByDate($soa){
 			'transType'=>'Credit Availment',
 			'repaymentAmt'=>$i['payAmount'],
 			'status'=>'Active',
-			'term'=>$i['numberPaydays']
+			'term'=>$i['numberPaydays'],
+			'loanId'=>$i['loanid']
 		);
 		$arr[] = $j;
 	}
@@ -589,6 +590,48 @@ function getCompaniesByID($id = NULL){
 	}
 
 	echo json_encode($arr);
+
+}
+
+function doUpload($filename = ''){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspUserUpload ?");
+	$sth->bindParam(1,  $filename);
+	$sth->execute();
+}
+
+function addLineItem($li = array()){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspPaymentLineItem ?, ?, ?, ?, ?, ?");
+
+	$sth->bindParam(1,  $li['payId']);
+	$sth->bindParam(2,  $li['loanId']);
+	$sth->bindParam(3,  $li['payDate']);
+	$sth->bindParam(4,  $li['payCount']);
+	$sth->bindParam(5,  $li['payAmount']);
+	$sth->bindParam(6,  $li['balance']);
+	$res = $sth->execute();
+
+	echo json_encode($res);
+
+}
+
+function loanPretermRequest($li = array()){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspLoanPretermRequest ?, ?, ?");
+
+	$sth->bindParam(1,  $li['loanId']);
+	$sth->bindParam(2,  $li['amt']);
+	$sth->bindParam(3,  $li['note']);
+	$res = $sth->execute();
+
+	echo json_encode($res);
 
 }
 
@@ -659,10 +702,11 @@ switch ($req) {
 		sendLoanApproved($p['mobile']);
 		break;
 	case 'uploadcsv':
+		doUpload($p['fname']);
 		//echo json_encode($p['data']);
-		foreach ($p['data'] as $key => $value) {
+		/*foreach ($p['data'] as $key => $value) {
 			echo json_encode(explode(",", $value));
-		}
+		}*/
 		break;
 	case 'manual_add_employee':
 		//print_r($p['emp']);
@@ -697,6 +741,12 @@ switch ($req) {
 		break;
 	case 'get_pending_loan_count':
 		echo getLoanCountByStatus($p['cid'], 1)['pending'];
+		break;
+	case 'add_line_item':
+		addLineItem($p['lineItem']);
+		break;
+	case 'loan_preterm_request':
+		loanPretermRequest($p['loan']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
