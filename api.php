@@ -227,14 +227,14 @@ function checkUnameExists($uname){
 	echo !empty($arr) ? json_encode($arr) : false;
 }
 
-function changePass($id,$pass,$newPass){
+function changePass($id,$newPass){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
-	$sth = $conn->prepare("uspUserUpdatePassword ?, ?, ?"); // AND Company = ? 
+	$sth = $conn->prepare("uspUserPasswordReset ?, ?, ?"); // AND Company = ? 
 	$sth->bindParam(1, $id);
 	$sth->bindParam(2, $pass);
-	$sth->bindParam(3, $newPass);
+	$sth->bindParam(3, $out, PDO::PARAM_STR|PDO::PARAM_INPUT_OUTPUT, 4000);
 	$res = $sth->execute();
 
 	echo json_encode($res);
@@ -245,7 +245,10 @@ function sendMailForgotPw($email){
 	$api = getSendgridConfig();
 	$mail = Mail::getInstance($api);
 
-	$succ = $mail->send('rsantos@bxbesc.com',$email,'Reset Password',@file_get_contents('./templates/forgotpw.html'));
+	$html = @file_get_contents('./templates/forgotpw.html');
+	$html = preg_replace('/\$HASH/i', urlencode($email), $html);
+
+	$succ = $mail->send('rsantos@bxbesc.com',$email,'Reset Password',$html);
 	if($succ){
 		echo "Successful!";
 	}
@@ -669,7 +672,7 @@ switch ($req) {
 		sendMailForgotPw($p['email']);
 		break;
 	case 'changepass':
-		changePass($p['id'],$p['pass'],$p['newpass']);
+		changePass($p['id'],$p['pass']);
 		break;
 	case 'applyloan':
 		//echo json_encode($p['loan']);
