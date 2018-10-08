@@ -638,6 +638,58 @@ function loanPretermRequest($li = array()){
 
 }
 
+function getActiveMembers($cid){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("SELECT DISTINCT tml.CompanyID as companyID, tml.Name_First as firstName, tml.Name_Last as lastName, (SELECT isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as usedCredit, (SELECT 50000 - isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as unusedCredit, '50000' as creditLine, tml.Net_Salary as netSalary, tml.Gross_Salary as grossSalary, tml.master_id  FROM tblMasterlist tml INNER JOIN tblLogin tl ON tml.master_id = tl.master_id where tml.CompanyID = ?");
+
+	$sth->bindParam(1,  $cid);
+	$res = $sth->execute();
+
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$arr[] = $i;
+	}
+
+	echo json_encode($arr);
+}
+
+function getAllMembers($cid){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("SELECT DISTINCT tml.CompanyID as companyID, tml.Name_First as firstName, tml.Name_Last as lastName, COALESCE(tl.email,tml.Email) as email, tml.Net_Salary as netSalary, tml.Gross_Salary as grossSalary, tml.master_id  FROM tblMasterlist tml LEFT JOIN tblLogin tl ON tml.master_id = tl.master_id where tml.CompanyID = ?");
+
+	$sth->bindParam(1,  $cid);
+	$res = $sth->execute();
+
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$arr[] = $i;
+	}
+
+	echo json_encode($arr);
+}
+
+function getLineItemsByID($loanId, $sched){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("SELECT '' as label, payAmount as amt, paymentID as payId, balance as bal, payCount as seqNo FROM tblPaymentSOA WHERE loanID = ? AND payDate = ?");
+
+	$sth->bindParam(1,  $loanId);
+	$sth->bindParam(2,  $sched);
+	$res = $sth->execute();
+
+	$arr = array();
+	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$arr[] = $i;
+	}
+
+	echo json_encode($arr);
+}
+
 switch ($req) {
 	case 'login':
 		$usr = isset($p['username']) ? $p['username'] : "";
@@ -750,6 +802,15 @@ switch ($req) {
 		break;
 	case 'loan_preterm_request':
 		loanPretermRequest($p['loan']);
+		break;
+	case 'get_active_members':
+		getActiveMembers($p['cid']);
+		break;
+	case 'get_all_members':
+		getAllMembers($p['cid']);
+		break;
+	case 'get_line_items_by_id':
+		getLineItemsByID($p['loanid'],$p['sched']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
