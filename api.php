@@ -642,13 +642,47 @@ function getActiveMembers($cid){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
-	$sth = $conn->prepare("SELECT DISTINCT tml.CompanyID as companyID, tml.Name_First as firstName, tml.Name_Last as lastName, (SELECT isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as usedCredit, (SELECT 50000 - isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as unusedCredit, '50000' as creditLine, tml.Net_Salary as netSalary, tml.Gross_Salary as grossSalary, tml.master_id  FROM tblMasterlist tml INNER JOIN tblLogin tl ON tml.master_id = tl.master_id where tml.CompanyID = ?");
+	$sth = $conn->prepare("SELECT DISTINCT 
+							tml.CompanyID as companyID, 
+							CONCAT('00',tml.CompanyID) as companyCode, 
+							tml.Name_First as firstName, 
+							tml.Name_Last as lastName,
+							tml.Name_Middle as middleName,
+							tml.Gender as gender,
+							tml.Position_Title as position,
+							tml.Entity as entity,
+							tml.Type as type,
+							tml.Division as division,
+							tml.Bank_Name as bankName,
+							tml.Date_Hired as hiredDate,
+							tml.Birthday as birthday,
+							tml.Vacation_Leave as vacationLeave,
+							tml.Sick_Leave as sickLeave,
+							tml.Maternity_Leaves as maternityLeave,
+							tml.Paternity_Leaves as paternityLeave,
+							(SELECT isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as usedCredit,
+							(SELECT 50000 - isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as unusedCredit, 
+							'50000' as creditLine,
+							tml.Net_Salary as netSalary,
+							tml.Gross_Salary as grossSalary,
+							tml.email as email,
+							RIGHT(tl.mobile,10) as mobile,
+							tml.Payroll_Account as payrollAccount,
+							tml.master_id as employeeId,
+							tml.master_id
+							FROM tblMasterlist tml 
+							INNER JOIN tblLogin tl 
+							ON tml.master_id = tl.master_id 
+							where tml.CompanyID = ?");
 
 	$sth->bindParam(1,  $cid);
 	$res = $sth->execute();
 
 	$arr = array();
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$i['netSalary'] = round($i['netSalary'],2);
+		$i['grossSalary'] = round($i['grossSalary'],2);
+		$i['gender'] = substr(strtolower($i['gender']),-1);
 		$arr[] = $i;
 	}
 
@@ -659,7 +693,38 @@ function getAllMembers($cid){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
-	$sth = $conn->prepare("SELECT DISTINCT tml.CompanyID as companyID, tml.Name_First as firstName, tml.Name_Last as lastName, COALESCE(tl.email,tml.Email) as email, tml.Net_Salary as netSalary, tml.Gross_Salary as grossSalary, tml.master_id  FROM tblMasterlist tml LEFT JOIN tblLogin tl ON tml.master_id = tl.master_id where tml.CompanyID = ?");
+	$sth = $conn->prepare("SELECT DISTINCT 
+							tml.CompanyID as companyID, 
+							CONCAT('00',tml.CompanyID) as companyCode, 
+							tml.Name_First as firstName, 
+							tml.Name_Last as lastName,
+							tml.Name_Middle as middleName,
+							tml.Gender as gender,
+							tml.Position_Title as position,
+							tml.Entity as entity,
+							tml.Type as type,
+							tml.Division as division,
+							tml.Bank_Name as bankName,
+							tml.Date_Hired as hiredDate,
+							tml.Birthday as birthday,
+							tml.Vacation_Leave as vacationLeave,
+							tml.Sick_Leave as sickLeave,
+							tml.Maternity_Leaves as maternityLeave,
+							tml.Paternity_Leaves as paternityLeave,
+							(SELECT isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as usedCredit,
+							(SELECT 50000 - isnull(SUM(principal),0) FROM tblLoan WHERE master_id = tml.master_id AND status = 2) as unusedCredit, 
+							'50000' as creditLine,
+							tml.Net_Salary as netSalary,
+							tml.Gross_Salary as grossSalary,
+							COALESCE(tl.email,tml.email) as email,
+							RIGHT(tl.mobile,10) as mobile,
+							tml.Payroll_Account as payrollAccount,
+							tml.master_id as employeeId,
+							tml.master_id
+							FROM tblMasterlist tml 
+							INNER JOIN tblLogin tl 
+							ON tml.master_id = tl.master_id 
+							where tml.CompanyID = ?");
 
 	$sth->bindParam(1,  $cid);
 	$res = $sth->execute();
