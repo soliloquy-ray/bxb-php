@@ -249,7 +249,7 @@ function sendMailForgotPw($email){
 
 	$user = getLoginByEmail($email);
 	$html = preg_replace('/\$USERNAME/i', $user['user'], $html);
-	$html = preg_replace('/\$URL/i', $http_origin, $html);
+	$html = preg_replace('/\$URL/i', 'https://test.bxbesc.com', $html);
 	unset($user['user']);
 
 	$hash = base64_encode(json_encode($user));
