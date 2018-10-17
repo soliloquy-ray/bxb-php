@@ -540,7 +540,7 @@ function getSOAByDate($soa){
 			'refNo'=>'',
 			'companyAct'=>($rs['status']== 3 ? 'paid' : 'unpaid'),
 			'status'=>($rs['status']==3 ? 'paid' : 'unpaid'),
-			'mgtAct'=>($rs['status']==3 ? 'confirmed' : 'confirm'),
+			'mgtAct'=>($rs['status']==3 ? 'confirmed' : ($rs['status'] == 2 ? 'confirm': 'recon')),
 			'CompanyID'=>$i['CompanyID'],
 			'statusID'=>(is_null($rs['status']) ? 1 : $rs['status']),
 			'soaID'=>$rs['soaID']//(is_null($i['status']) ? 1 : $i['status'])
