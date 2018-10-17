@@ -246,7 +246,13 @@ function sendMailForgotPw($email){
 	$mail = Mail::getInstance($api);
 
 	$html = @file_get_contents('./templates/forgotpw.html');
-	$html = preg_replace('/\$HASH/i', urlencode($email), $html);
+
+	$user = getLoginByEmail($email);
+	$html = preg_replace('/\$USERNAME/i', $user['user'], $html);
+	unset($user['user']);
+
+	$hash = base64_encode(json_encode($user));
+	$html = preg_replace('/\$HASH/i', $hash, $html);
 
 	$succ = $mail->send('rsantos@bxbesc.com',$email,'Reset Password',$html);
 	if($succ){
@@ -507,7 +513,7 @@ function getSOAByDate($soa){
 	$conn = $db->getConnection();
 
 	$sth = $conn->prepare("EXEC uspSOAbyCompany ?, ?, ?");
-
+	//uspSOAbyCompanyWithStatus
 	$sth->bindParam(1,  $soa['date1']);
 	$sth->bindParam(2,  $soa['date2']);
 	$sth->bindParam(3,  $soa['cid']);
@@ -515,17 +521,28 @@ function getSOAByDate($soa){
 	$arr = array();
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
 		//$i['applicationDate'] = date('Y-m-d H:i:s',strtotime($i['applicationDate']));
+		$li = $i['CompanyID'];
+		$billPeriod = date('Y-m-d',strtotime($i['payDate']));
+		$ststh = $conn->prepare("EXEC uspSOAbyCompanyWithStatus ?, ?");
+		$ststh->bindParam(1,  $billPeriod);
+		$ststh->bindParam(2,  $li);
+		$ststh->execute();
+		$result = $ststh->fetchAll();
+
+		$rs = array_pop($result);
 		$j = array(
 			'pdf'=>'PDF',
 			'company'=>$i['company_name'],
-			'billPeriod'=>date('Y-m-d',strtotime($i['payDate'])),
+			'billPeriod'=>$billPeriod,
 			'amt'=>$i['payAmount'],
 			'soaNo'=>$i['soaref'],
 			'refNo'=>'',
-			'companyAct'=>($i['status']==1 ? 'paid' : 'unpaid'),
-			'status'=>($i['status']==1 ? 'paid' : 'unpaid'),
-			'mgtAct'=>($i['status']==1 ? 'confirmed' : 'confirm'),
-			'CompanyID'=>$i['CompanyID']
+			'companyAct'=>($rs['status']== 3 ? 'paid' : 'unpaid'),
+			'status'=>($rs['status']==3 ? 'paid' : 'unpaid'),
+			'mgtAct'=>($rs['status']==3 ? 'confirmed' : 'confirm'),
+			'CompanyID'=>$i['CompanyID'],
+			'statusID'=>(is_null($rs['status']) ? 1 : $rs['status']),
+			'soaID'=>$rs['soaID']//(is_null($i['status']) ? 1 : $i['status'])
 		);
 		$arr[] = $j;
 	}
@@ -609,18 +626,30 @@ function addLineItem($li = array()){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
-	$sth = $conn->prepare("EXEC uspPaymentLineItem ?, ?, ?, ?, ?, ?");
+	$sth = $conn->prepare("EXEC uspPaymentReconAdd ?, ?, ?, ?, ?");
 
 	$sth->bindParam(1,  $li['payId']);
-	$sth->bindParam(2,  $li['loanId']);
-	$sth->bindParam(3,  $li['payDate']);
-	$sth->bindParam(4,  $li['payCount']);
-	$sth->bindParam(5,  $li['payAmount']);
-	$sth->bindParam(6,  $li['balance']);
+	$sth->bindParam(2,  $li['payDate']);
+	$sth->bindParam(3,  $li['companyID']);
+	$sth->bindParam(4,  $li['payAmount']);
+	$sth->bindParam(5,  $li['reconDescription']);
 	$res = $sth->execute();
 
 	echo json_encode($res);
 
+}
+
+function finalizeSOA($cid = 0, $sched){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspSOAbyCompanyDetailSubmit ?, ?");
+
+	$sth->bindParam(1,  $sched);
+	$sth->bindParam(2,  $cid);
+	$res = $sth->execute();
+
+	echo $res;
 }
 
 function loanPretermRequest($li = array()){
@@ -737,22 +766,57 @@ function getAllMembers($cid){
 	echo json_encode($arr);
 }
 
-function getLineItemsByID($loanId, $sched){
+function getLineItemsByID($cid, $sched){
 	$db = DB::getInstance();
 	$conn = $db->getConnection();
 
-	$sth = $conn->prepare("SELECT '' as label, payAmount as amt, paymentID as payId, balance as bal, payCount as seqNo FROM tblPaymentSOA WHERE loanID = ? AND payDate = ?");
+	$sth = $conn->prepare("EXEC uspPaymentReconGet ?, ?");
 
-	$sth->bindParam(1,  $loanId);
-	$sth->bindParam(2,  $sched);
+	$sth->bindParam(1,  $sched);
+	$sth->bindParam(2,  $cid);
 	$res = $sth->execute();
-
 	$arr = array();
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		$i['label'] = $i['reconDescription'];
+		$i['amt'] = $i['reconAmount'];
+		$i['payId'] = $i['paymentID'];
+		$i['bal'] = NULL;
+		$i['seqNo'] = $i['reconID'];
+		$i['loanId'] = $i['paymentID'];
 		$arr[] = $i;
 	}
 
 	echo json_encode($arr);
+}
+
+/* 1 = active, 2 = submitted, 3 = paid */
+function soaStatusUpdate($soa){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspSOAStatusUpdate ?, ?, ?");
+
+	$sth->bindParam(1,  $soa['id']);
+	$sth->bindParam(2,  $soa['status']);
+	$sth->bindParam(3,  $soa['data']);
+	$res = $sth->execute();
+
+	echo $res;
+}
+
+function getLoginByEmail($email){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspLoginGetbyEmail ?");
+
+	$sth->bindParam(1,  $email);
+	$rs = $sth->execute();
+	$i = $sth->fetch(PDO::FETCH_ASSOC);
+
+	$user = getUserDetailsById($i['master_id']);
+	$i['user'] = $user['Name_First']." ".$user['Name_Last'];
+	return $i;
 }
 
 switch ($req) {
@@ -865,6 +929,9 @@ switch ($req) {
 	case 'add_line_item':
 		addLineItem($p['lineItem']);
 		break;
+	case 'finalize_soa':
+		finalizeSOA($p['cid'], $p['sched']);
+		break;
 	case 'loan_preterm_request':
 		loanPretermRequest($p['loan']);
 		break;
@@ -875,7 +942,10 @@ switch ($req) {
 		getAllMembers($p['cid']);
 		break;
 	case 'get_line_items_by_id':
-		getLineItemsByID($p['loanid'],$p['sched']);
+		getLineItemsByID($p['cid'],$p['sched']);
+		break;
+	case 'soa_status_update':
+		soaStatusUpdate($p['soa']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
