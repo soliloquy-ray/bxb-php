@@ -248,9 +248,8 @@ function sendMailForgotPw($email){
 	$html = @file_get_contents('./templates/forgotpw.html');
 
 	$user = getLoginByEmail($email);
-	$liveurl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 	$html = preg_replace('/\$USERNAME/i', $user['user'], $html);
-	$html = preg_replace('/\$URL/i', $liveurl, $html);
+	$html = preg_replace('/\$URL/i', $http_origin, $html);
 	unset($user['user']);
 
 	$hash = base64_encode(json_encode($user));
