@@ -375,6 +375,38 @@ function manualAddEmp($emp){
 	echo json_encode($res);
 }
 
+function manualUserUpdate($emp){
+	$db = DB::getInstance();
+	$conn = $db->getConnection();
+
+	$sth = $conn->prepare("EXEC uspUserUpdate ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+	$sth->bindParam(1,  $emp['employeeId']);
+	$sth->bindParam(2,  $emp['lastName']);
+	$sth->bindParam(3,  $emp['firstName']);
+	$sth->bindParam(4,  $emp['middleName']);
+	$sth->bindParam(5,  $emp['email']);
+	$sth->bindParam(6,  $emp['mobile']);
+	$sth->bindParam(7,  $emp['hiredDate']);
+	$sth->bindParam(8,  $emp['gender']);
+	$sth->bindParam(9,  $emp['birthday']);
+	$sth->bindParam(10, $emp['position']);
+	$sth->bindParam(11, $emp['entity']);
+	$sth->bindParam(12, $emp['type']);
+	$sth->bindParam(13, $emp['division']);
+	$sth->bindParam(14, $emp['netSalary']);
+	$sth->bindParam(15, $emp['grossSalary']);
+	$sth->bindParam(16, $emp['payrollAccount']);
+	$sth->bindParam(17, $emp['bankName']);
+	$sth->bindParam(18, $emp['vacationLeave']);
+	$sth->bindParam(19, $emp['sickLeave']);
+	$sth->bindParam(20, $emp['maternityLeave']);
+	$sth->bindParam(21, $emp['paternityLeave']);
+	$sth->bindParam(22, $emp['tin']);
+	$res = $sth->execute();
+
+	echo $res;
+}
+
 /**
 @company_name, @country, @address, @city, @zipcode, @phone, @mobile, @maxLoan, @minLoan, @maxRate, @minRate, @bank varchar(100),
     @bankBranch varchar(100),
@@ -953,6 +985,9 @@ switch ($req) {
 		break;
 	case 'soa_status_update':
 		soaStatusUpdate($p['soa']);
+		break;
+	case 'user_update':
+		manualUserUpdate($p['user']);
 		break;
 	case 'test':
 		echo json_encode(getallheaders());
