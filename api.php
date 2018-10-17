@@ -124,11 +124,17 @@ function getUserDetailsById($id = 0){
 	$sth->execute();
 
 	$arr = array();
+	$ct = 0;
 	while($i = $sth->fetch(PDO::FETCH_ASSOC)){
+		++$ct;
 		$arr[] = $i;
 	}
 
-	return $arr[count($arr)-1];
+	if($ct>0){
+		return $arr[count($arr)-1];
+	}else{
+		return array(false);
+	}
 }
 
 function addUser($user = array()){
